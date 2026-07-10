@@ -1,14 +1,8 @@
 # Asset Service Ticket API
 
-Asset Service Ticket API is a Spring Boot backend project created to manage organizational assets and service tickets. The initial version includes department, user, asset, ticket and ticket comment management with validation, exception handling, PostgreSQL integration and Swagger documentation.
+Asset Service Ticket API is a RESTful backend application for managing company assets and service tickets. It provides endpoints for departments, users, assets, service tickets, ticket comments and a basic report summary.
 
-This repository contains the initial version prepared for internship project tracking. The project focuses on a clean backend structure, readable code and a foundation that can be improved step by step.
-
-## Türkçe Açıklama
-
-Asset Service Ticket API, kurum içi demirbaşların ve servis taleplerinin yönetilmesi için geliştirilmiş bir Spring Boot backend projesidir. İlk sürümde departman, kullanıcı, demirbaş, servis talebi ve talep yorumu yönetimi; validasyon, global hata yönetimi, PostgreSQL bağlantısı ve Swagger dokümantasyonu ile birlikte sunulmuştur.
-
-Bu proje staj sürecinde GitHub üzerinden gelişimi takip edilebilir olacak şekilde hazırlanmıştır. İlk sürümün amacı sistemi gereksiz karmaşık hale getirmeden temiz, anlaşılır ve geliştirilebilir bir backend temeli oluşturmaktır.
+The project is built with Spring Boot and follows a layered architecture using controllers, services, repositories, entities and DTOs. It includes request validation, global exception handling, PostgreSQL integration, seed data and Swagger/OpenAPI documentation.
 
 ## Technologies
 
@@ -24,15 +18,16 @@ Bu proje staj sürecinde GitHub üzerinden gelişimi takip edilebilir olacak şe
 
 ## Features
 
-- Department CRUD
-- User management for domain modeling
-- Asset registration and lookup by asset tag
-- Service ticket creation, assignment and status updates
+- Department, user and asset management
+- Asset lookup by asset tag
+- Service ticket creation and updates
+- Technician assignment for tickets
+- Ticket status management
 - Ticket comments
-- Simple report summary endpoint
-- DTO-based API responses
-- Global exception handling
-- Startup seed data for quick testing
+- Basic report summary
+- DTO-based request and response models
+- Validation and centralized error responses
+- Startup seed data for local testing
 
 ## API Endpoints
 
@@ -99,8 +94,6 @@ spring.datasource.password=postgres
 
 If your PostgreSQL username or password is different, update `src/main/resources/application.properties`.
 
-PostgreSQL kullanıcı adı veya şifreniz farklıysa `src/main/resources/application.properties` dosyasındaki bağlantı bilgilerini güncelleyin.
-
 ## How to Run
 
 ```bash
@@ -124,8 +117,6 @@ http://localhost:8080/swagger-ui/index.html
 ## Seed Data
 
 When the database is empty, the application creates demo departments, users, assets and tickets on startup.
-
-Veritabanı boş olduğunda uygulama başlangıçta örnek departman, kullanıcı, demirbaş ve servis talepleri oluşturur.
 
 ## Future Improvements
 
