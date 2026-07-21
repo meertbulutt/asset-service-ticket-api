@@ -12,11 +12,13 @@ import com.example.assetserviceticket.repository.UserRepository;
 import com.example.assetserviceticket.service.TicketCommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TicketCommentServiceImpl implements TicketCommentService {
 
     private final TicketCommentRepository commentRepository;
@@ -24,6 +26,7 @@ public class TicketCommentServiceImpl implements TicketCommentService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public TicketCommentResponse create(Long ticketId, CreateTicketCommentRequest request) {
         TicketComment comment = new TicketComment();
         comment.setTicket(getTicket(ticketId));

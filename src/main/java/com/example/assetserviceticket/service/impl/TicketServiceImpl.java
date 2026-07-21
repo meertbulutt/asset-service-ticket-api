@@ -14,23 +14,28 @@ import com.example.assetserviceticket.exception.BusinessRuleException;
 import com.example.assetserviceticket.exception.ResourceNotFoundException;
 import com.example.assetserviceticket.repository.AssetRepository;
 import com.example.assetserviceticket.repository.ServiceTicketRepository;
+import com.example.assetserviceticket.repository.TicketCommentRepository;
 import com.example.assetserviceticket.repository.UserRepository;
 import com.example.assetserviceticket.service.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TicketServiceImpl implements TicketService {
 
     private final ServiceTicketRepository ticketRepository;
     private final AssetRepository assetRepository;
     private final UserRepository userRepository;
+    private final TicketCommentRepository commentRepository;
 
     @Override
+    @Transactional
     public TicketResponse create(CreateTicketRequest request) {
         ServiceTicket ticket = new ServiceTicket();
         ticket.setTicketNumber(generateTicketNumber());
@@ -54,6 +59,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional
     public TicketResponse update(Long id, UpdateTicketRequest request) {
         ServiceTicket ticket = getTicket(id);
         ensureEditable(ticket);
@@ -64,6 +70,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional
     public TicketResponse assign(Long id, AssignTicketRequest request) {
         ServiceTicket ticket = getTicket(id);
         ensureEditable(ticket);
@@ -71,26 +78,36 @@ public class TicketServiceImpl implements TicketService {
         if (technician.getRole() != UserRole.TECHNICIAN) {
             throw new BusinessRuleException("Assigned user must have TECHNICIAN role");
         }
+        if (!technician.isActive()) {
+            throw new BusinessRuleException("Inactive users cannot be assigned as technicians");
+        }
         ticket.setAssignedTechnician(technician);
         ticket.setStatus(TicketStatus.ASSIGNED);
         return toResponse(ticketRepository.save(ticket));
     }
 
     @Override
+    @Transactional
     public TicketResponse updateStatus(Long id, UpdateTicketStatusRequest request) {
         ServiceTicket ticket = getTicket(id);
         ensureEditable(ticket);
         ticket.setStatus(request.status());
         if (request.status() == TicketStatus.CLOSED) {
             ticket.setClosedAt(LocalDateTime.now());
+        } else {
+            ticket.setClosedAt(null);
         }
         return toResponse(ticketRepository.save(ticket));
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         ServiceTicket ticket = getTicket(id);
         ensureEditable(ticket);
+        if (commentRepository.existsByTicketId(id)) {
+            throw new BusinessRuleException("Ticket cannot be deleted while comments are linked to it");
+        }
         ticketRepository.delete(ticket);
     }
 

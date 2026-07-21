@@ -13,4 +13,6 @@ public interface ServiceTicketRepository extends JpaRepository<ServiceTicket, Lo
     long countByStatus(TicketStatus status);
 
     long countByPriority(TicketPriority priority);
+
+    boolean existsByAssetId(Long assetId);
 }

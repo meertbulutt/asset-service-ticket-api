@@ -4,6 +4,7 @@ import com.example.assetserviceticket.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -27,9 +29,38 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI(), null);
     }
 
-    @ExceptionHandler({BusinessRuleException.class, BadRequestException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({BusinessRuleException.class, BadRequestException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception exception, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(), null);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception,
+            HttpServletRequest request
+    ) {
+        String message = "Invalid value for parameter: " + exception.getName();
+        Class<?> requiredType = exception.getRequiredType();
+        if (requiredType != null && requiredType.isEnum()) {
+            String allowedValues = String.join(", ", Arrays.stream(requiredType.getEnumConstants())
+                    .map(Object::toString)
+                    .toList());
+            message = "Invalid value for parameter '" + exception.getName() + "'. Allowed values: " + allowedValues;
+        }
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), null);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "Request body is invalid or contains unsupported values",
+                request.getRequestURI(),
+                null
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

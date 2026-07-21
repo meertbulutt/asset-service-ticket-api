@@ -12,17 +12,20 @@ import com.example.assetserviceticket.repository.UserRepository;
 import com.example.assetserviceticket.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
 
     @Override
+    @Transactional
     public UserResponse create(CreateUserRequest request) {
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
             throw new DuplicateResourceException("User already exists with email: " + request.email());
@@ -47,6 +50,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse update(Long id, UpdateUserRequest request) {
         User user = getUser(id);
         if (!user.getEmail().equalsIgnoreCase(request.email()) && userRepository.existsByEmailIgnoreCase(request.email())) {
@@ -64,6 +68,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponse deactivate(Long id) {
         User user = getUser(id);
         user.setActive(false);

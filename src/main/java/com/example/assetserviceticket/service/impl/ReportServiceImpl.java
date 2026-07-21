@@ -9,9 +9,11 @@ import com.example.assetserviceticket.repository.ServiceTicketRepository;
 import com.example.assetserviceticket.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
     private final AssetRepository assetRepository;

@@ -8,26 +8,32 @@ import com.example.assetserviceticket.entity.Department;
 import com.example.assetserviceticket.entity.User;
 import com.example.assetserviceticket.enums.AssetStatus;
 import com.example.assetserviceticket.enums.AssetType;
+import com.example.assetserviceticket.exception.BusinessRuleException;
 import com.example.assetserviceticket.exception.DuplicateResourceException;
 import com.example.assetserviceticket.exception.ResourceNotFoundException;
 import com.example.assetserviceticket.repository.AssetRepository;
 import com.example.assetserviceticket.repository.DepartmentRepository;
+import com.example.assetserviceticket.repository.ServiceTicketRepository;
 import com.example.assetserviceticket.repository.UserRepository;
 import com.example.assetserviceticket.service.AssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AssetServiceImpl implements AssetService {
 
     private final AssetRepository assetRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final ServiceTicketRepository ticketRepository;
 
     @Override
+    @Transactional
     public AssetResponse create(CreateAssetRequest request) {
         if (assetRepository.existsByAssetTagIgnoreCase(request.assetTag())) {
             throw new DuplicateResourceException("Asset already exists with tag: " + request.assetTag());
@@ -66,6 +72,7 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    @Transactional
     public AssetResponse update(Long id, UpdateAssetRequest request) {
         Asset asset = getAsset(id);
         if (!asset.getAssetTag().equalsIgnoreCase(request.assetTag())
@@ -79,8 +86,12 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         Asset asset = getAsset(id);
+        if (ticketRepository.existsByAssetId(id)) {
+            throw new BusinessRuleException("Asset cannot be deleted while service tickets are linked to it");
+        }
         assetRepository.delete(asset);
     }
 

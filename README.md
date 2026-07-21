@@ -29,6 +29,17 @@ The project is built with Spring Boot and follows a layered architecture using c
 - Validation and centralized error responses
 - Startup seed data for local testing
 
+## Business Rules
+
+- Asset tags must be unique.
+- New tickets are created with `OPEN` status.
+- Ticket numbers are generated automatically in `TCK-000001` format.
+- Assigning a ticket to a technician changes its status to `ASSIGNED`.
+- Only users with `TECHNICIAN` role can be assigned to tickets.
+- Closing a ticket sets the `closedAt` value automatically.
+- `CLOSED` and `CANCELLED` tickets cannot be updated.
+- Departments and assets cannot be deleted while related records still exist.
+
 ## API Endpoints
 
 ### Departments
@@ -87,14 +98,16 @@ CREATE DATABASE asset_ticket_db;
 Default local configuration:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/asset_ticket_db
-spring.datasource.username=postgres
-spring.datasource.password=postgres
+DB_URL=jdbc:postgresql://localhost:5432/asset_ticket_db
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
 ```
 
-If your PostgreSQL username or password is different, update `src/main/resources/application.properties`.
+If these values are not provided, the application uses the same defaults from `src/main/resources/application.properties`.
 
 ## How to Run
+
+Install Java 21 and Maven, then run:
 
 ```bash
 mvn spring-boot:run
