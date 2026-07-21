@@ -113,6 +113,12 @@ Install Java 21 and Maven, then run:
 mvn spring-boot:run
 ```
 
+If Maven uses a newer JDK on macOS, run it explicitly with Java 21:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) DB_USERNAME=$(whoami) DB_PASSWORD= mvn spring-boot:run
+```
+
 The API will run at:
 
 ```text
