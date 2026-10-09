@@ -2,9 +2,11 @@ package com.example.assetserviceticket.dto.response;
 
 import com.example.assetserviceticket.enums.TicketPriority;
 import com.example.assetserviceticket.enums.TicketStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
+@Schema(description = "Destek talebinin durumu, önceliği ve ilişkili kayıtlarıyla birlikte döndürülen yanıtı.")
 public record TicketResponse(
         Long id,
         String ticketNumber,

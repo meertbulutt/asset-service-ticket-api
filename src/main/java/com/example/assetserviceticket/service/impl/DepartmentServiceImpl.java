@@ -30,7 +30,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public DepartmentResponse create(CreateDepartmentRequest request) {
         if (departmentRepository.existsByNameIgnoreCase(request.name())) {
-            throw new DuplicateResourceException("Department already exists with name: " + request.name());
+            throw new DuplicateResourceException("Bu adla bir departman zaten kayıtlı: " + request.name());
         }
 
         Department department = new Department();
@@ -55,7 +55,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department department = getDepartment(id);
         if (!department.getName().equalsIgnoreCase(request.name())
                 && departmentRepository.existsByNameIgnoreCase(request.name())) {
-            throw new DuplicateResourceException("Department already exists with name: " + request.name());
+            throw new DuplicateResourceException("Bu adla bir departman zaten kayıtlı: " + request.name());
         }
 
         department.setName(request.name());
@@ -68,14 +68,14 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void delete(Long id) {
         Department department = getDepartment(id);
         if (userRepository.existsByDepartmentId(id) || assetRepository.existsByDepartmentId(id)) {
-            throw new BusinessRuleException("Department cannot be deleted while users or assets are assigned to it");
+            throw new BusinessRuleException("Kullanıcı veya demirbaş bağlı olan departman silinemez.");
         }
         departmentRepository.delete(department);
     }
 
     private Department getDepartment(Long id) {
         return departmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip departman bulunamadı. Numara: " + id));
     }
 
     private DepartmentResponse toResponse(Department department) {

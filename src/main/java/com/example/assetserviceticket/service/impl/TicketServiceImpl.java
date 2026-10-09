@@ -36,32 +36,44 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public TicketResponse create(CreateTicketRequest request) {
+    public TicketResponse create(CreateTicketRequest request, String creatorEmail) {
+        User creator = getUserByEmail(creatorEmail);
+        Asset asset = getAsset(request.assetId());
+        if (creator.getRole() == UserRole.EMPLOYEE
+                && (asset.getAssignedUser() == null || !asset.getAssignedUser().getId().equals(creator.getId()))) {
+            throw new ResourceNotFoundException("Bu demirbaş bulunamadı veya size zimmetli değil.");
+        }
         ServiceTicket ticket = new ServiceTicket();
         ticket.setTicketNumber(generateTicketNumber());
         ticket.setTitle(request.title());
         ticket.setDescription(request.description());
         ticket.setPriority(request.priority());
         ticket.setStatus(TicketStatus.OPEN);
-        ticket.setAsset(getAsset(request.assetId()));
-        ticket.setCreatedBy(getUser(request.createdById()));
+        ticket.setAsset(asset);
+        ticket.setCreatedBy(creator);
         return toResponse(ticketRepository.save(ticket));
     }
 
     @Override
-    public List<TicketResponse> findAll() {
-        return ticketRepository.findAll().stream().map(this::toResponse).toList();
+    public List<TicketResponse> findAll(String userEmail) {
+        User currentUser = getUserByEmail(userEmail);
+        List<ServiceTicket> tickets = switch (currentUser.getRole()) {
+            case ADMIN -> ticketRepository.findAll();
+            case TECHNICIAN -> ticketRepository.findByAssignedTechnicianIdOrderByCreatedAtDesc(currentUser.getId());
+            case EMPLOYEE -> ticketRepository.findByCreatedByIdOrderByCreatedAtDesc(currentUser.getId());
+        };
+        return tickets.stream().map(this::toResponse).toList();
     }
 
     @Override
-    public TicketResponse findById(Long id) {
-        return toResponse(getTicket(id));
+    public TicketResponse findById(Long id, String userEmail) {
+        return toResponse(getTicketForUser(id, userEmail));
     }
 
     @Override
     @Transactional
-    public TicketResponse update(Long id, UpdateTicketRequest request) {
-        ServiceTicket ticket = getTicket(id);
+    public TicketResponse update(Long id, UpdateTicketRequest request, String userEmail) {
+        ServiceTicket ticket = getTicketForUser(id, userEmail);
         ensureEditable(ticket);
         ticket.setTitle(request.title());
         ticket.setDescription(request.description());
@@ -71,15 +83,27 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public TicketResponse assign(Long id, AssignTicketRequest request) {
-        ServiceTicket ticket = getTicket(id);
+    public TicketResponse assign(Long id, AssignTicketRequest request, String userEmail) {
+        User actor = getUserByEmail(userEmail);
+        ServiceTicket ticket = getTicketForUser(id, userEmail);
         ensureEditable(ticket);
+        if (request.technicianId() == null) {
+            if (actor.getRole() != UserRole.ADMIN) {
+                throw new BusinessRuleException("Teknisyen atamasını yalnızca yönetici kaldırabilir.");
+            }
+            ticket.setAssignedTechnician(null);
+            ticket.setStatus(TicketStatus.OPEN);
+            return toResponse(ticketRepository.save(ticket));
+        }
         User technician = getUser(request.technicianId());
         if (technician.getRole() != UserRole.TECHNICIAN) {
-            throw new BusinessRuleException("Assigned user must have TECHNICIAN role");
+            throw new BusinessRuleException("Destek talebi yalnızca TEKNİSYEN rolündeki bir kullanıcıya atanabilir.");
         }
         if (!technician.isActive()) {
-            throw new BusinessRuleException("Inactive users cannot be assigned as technicians");
+            throw new BusinessRuleException("Devre dışı bırakılmış kullanıcılar teknisyen olarak atanamaz.");
+        }
+        if (actor.getRole() == UserRole.TECHNICIAN && !technician.getId().equals(actor.getId())) {
+            throw new BusinessRuleException("Teknisyen yalnızca kendisine atanmış talepte işlem yapabilir.");
         }
         ticket.setAssignedTechnician(technician);
         ticket.setStatus(TicketStatus.ASSIGNED);
@@ -88,8 +112,8 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public TicketResponse updateStatus(Long id, UpdateTicketStatusRequest request) {
-        ServiceTicket ticket = getTicket(id);
+    public TicketResponse updateStatus(Long id, UpdateTicketStatusRequest request, String userEmail) {
+        ServiceTicket ticket = getTicketForUser(id, userEmail);
         ensureEditable(ticket);
         ticket.setStatus(request.status());
         if (request.status() == TicketStatus.CLOSED) {
@@ -102,11 +126,11 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public void delete(Long id) {
-        ServiceTicket ticket = getTicket(id);
+    public void delete(Long id, String userEmail) {
+        ServiceTicket ticket = getTicketForUser(id, userEmail);
         ensureEditable(ticket);
         if (commentRepository.existsByTicketId(id)) {
-            throw new BusinessRuleException("Ticket cannot be deleted while comments are linked to it");
+            throw new BusinessRuleException("Yorumları bulunan destek talebi silinemez.");
         }
         ticketRepository.delete(ticket);
     }
@@ -120,23 +144,43 @@ public class TicketServiceImpl implements TicketService {
 
     private void ensureEditable(ServiceTicket ticket) {
         if (ticket.getStatus() == TicketStatus.CLOSED || ticket.getStatus() == TicketStatus.CANCELLED) {
-            throw new BusinessRuleException("Closed or cancelled tickets cannot be updated");
+            throw new BusinessRuleException("Kapatılmış veya iptal edilmiş destek talepleri güncellenemez.");
         }
     }
 
     private ServiceTicket getTicket(Long id) {
         return ticketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip destek talebi bulunamadı. Numara: " + id));
+    }
+
+    private ServiceTicket getTicketForUser(Long id, String email) {
+        ServiceTicket ticket = getTicket(id);
+        User actor = getUserByEmail(email);
+        boolean allowed = switch (actor.getRole()) {
+            case ADMIN -> true;
+            case TECHNICIAN -> ticket.getAssignedTechnician() != null
+                    && ticket.getAssignedTechnician().getId().equals(actor.getId());
+            case EMPLOYEE -> ticket.getCreatedBy().getId().equals(actor.getId());
+        };
+        if (!allowed) {
+            throw new ResourceNotFoundException("Bu destek talebi bulunamadı.");
+        }
+        return ticket;
     }
 
     private Asset getAsset(Long id) {
         return assetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip demirbaş bulunamadı. Numara: " + id));
     }
 
     private User getUser(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip kullanıcı bulunamadı. Numara: " + id));
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Oturum kullanıcısı bulunamadı."));
     }
 
     private TicketResponse toResponse(ServiceTicket ticket) {

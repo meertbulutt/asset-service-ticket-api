@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Giriş yap · VarlıkMasası</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="login-page">
+  <main class="login-card">
+    <a class="brand login-brand" href="/login.html"><span class="brand-mark">AD</span><span><strong>VarlıkMasası</strong><small>BT hizmet yönetimi</small></span></a>
+    <div class="eyebrow">GÜVENLİ OTURUM</div>
+    <h1>Tekrar hoş geldin</h1>
+    <p class="login-intro">Devam etmek için kurum hesabınla giriş yap.</p>
+    <div id="login-message" class="alert hidden" role="alert"></div>
+    <form id="login-form" action="/login" method="post">
+      <label>E-posta adresi<input name="username" type="email" autocomplete="username" placeholder="ornek@kurum.com" required autofocus></label>
+      <label>Parola<input name="password" type="password" autocomplete="current-password" placeholder="Parolanı gir" required></label>
+      <input type="hidden" name="_csrf">
+      <button class="button button-primary login-submit" type="submit">Giriş yap <span>→</span></button>
+    </form>
+    <p class="login-demo"><strong>Demo yönetici hesabı</strong><br>admin@example.com<br>Parola: Demo123!</p>
+    <a class="login-docs" href="/swagger-ui/index.html">API dokümantasyonunu aç ↗</a>
+  </main>
+  <script src="/login.js" defer></script>
+</body>
+</html>

@@ -6,14 +6,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateUserRequest(
-        @NotBlank(message = "Full name must not be blank")
+        @NotBlank(message = "Ad soyad boş bırakılamaz.")
         String fullName,
 
-        @NotBlank(message = "Email must not be blank")
-        @Email(message = "Email must be valid")
+        @NotBlank(message = "E-posta adresi boş bırakılamaz.")
+        @Email(message = "Geçerli bir e-posta adresi girilmelidir.")
         String email,
 
-        @NotNull(message = "Role must not be null")
+        @NotNull(message = "Kullanıcı rolü seçilmelidir.")
         UserRole role,
 
         Long departmentId,

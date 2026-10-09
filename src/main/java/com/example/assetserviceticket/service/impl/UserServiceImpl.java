@@ -13,6 +13,7 @@ import com.example.assetserviceticket.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -23,17 +24,19 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public UserResponse create(CreateUserRequest request) {
         if (userRepository.existsByEmailIgnoreCase(request.email())) {
-            throw new DuplicateResourceException("User already exists with email: " + request.email());
+            throw new DuplicateResourceException("Bu e-posta adresiyle bir kullanıcı zaten kayıtlı: " + request.email());
         }
 
         User user = new User();
         user.setFullName(request.fullName());
         user.setEmail(request.email());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(request.role());
         user.setDepartment(findDepartmentOrNull(request.departmentId()));
         return toResponse(userRepository.save(user));
@@ -54,7 +57,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse update(Long id, UpdateUserRequest request) {
         User user = getUser(id);
         if (!user.getEmail().equalsIgnoreCase(request.email()) && userRepository.existsByEmailIgnoreCase(request.email())) {
-            throw new DuplicateResourceException("User already exists with email: " + request.email());
+            throw new DuplicateResourceException("Bu e-posta adresiyle bir kullanıcı zaten kayıtlı: " + request.email());
         }
 
         user.setFullName(request.fullName());
@@ -77,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
     private User getUser(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip kullanıcı bulunamadı. Numara: " + id));
     }
 
     private Department findDepartmentOrNull(Long departmentId) {
@@ -85,7 +88,7 @@ public class UserServiceImpl implements UserService {
             return null;
         }
         return departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + departmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip departman bulunamadı. Numara: " + departmentId));
     }
 
     private UserResponse toResponse(User user) {

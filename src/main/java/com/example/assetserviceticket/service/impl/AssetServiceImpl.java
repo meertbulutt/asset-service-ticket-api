@@ -8,6 +8,7 @@ import com.example.assetserviceticket.entity.Department;
 import com.example.assetserviceticket.entity.User;
 import com.example.assetserviceticket.enums.AssetStatus;
 import com.example.assetserviceticket.enums.AssetType;
+import com.example.assetserviceticket.enums.UserRole;
 import com.example.assetserviceticket.exception.BusinessRuleException;
 import com.example.assetserviceticket.exception.DuplicateResourceException;
 import com.example.assetserviceticket.exception.ResourceNotFoundException;
@@ -36,7 +37,7 @@ public class AssetServiceImpl implements AssetService {
     @Transactional
     public AssetResponse create(CreateAssetRequest request) {
         if (assetRepository.existsByAssetTagIgnoreCase(request.assetTag())) {
-            throw new DuplicateResourceException("Asset already exists with tag: " + request.assetTag());
+            throw new DuplicateResourceException("Bu demirbaş etiketi zaten kayıtlı: " + request.assetTag());
         }
 
         Asset asset = new Asset();
@@ -46,7 +47,8 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
-    public List<AssetResponse> findAll(AssetType type, AssetStatus status) {
+    public List<AssetResponse> findAll(AssetType type, AssetStatus status, String userEmail) {
+        User currentUser = getUserByEmail(userEmail);
         List<Asset> assets;
         if (type != null && status != null) {
             assets = assetRepository.findByTypeAndStatus(type, status);
@@ -57,18 +59,24 @@ public class AssetServiceImpl implements AssetService {
         } else {
             assets = assetRepository.findAll();
         }
+        if (currentUser.getRole() == UserRole.EMPLOYEE) {
+            assets = assets.stream().filter(asset -> asset.getAssignedUser() != null
+                    && asset.getAssignedUser().getId().equals(currentUser.getId())).toList();
+        }
         return assets.stream().map(this::toResponse).toList();
     }
 
     @Override
-    public AssetResponse findById(Long id) {
-        return toResponse(getAsset(id));
+    public AssetResponse findById(Long id, String userEmail) {
+        return toResponse(getVisibleAsset(id, userEmail));
     }
 
     @Override
-    public AssetResponse findByAssetTag(String assetTag) {
-        return toResponse(assetRepository.findByAssetTagIgnoreCase(assetTag)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with tag: " + assetTag)));
+    public AssetResponse findByAssetTag(String assetTag, String userEmail) {
+        Asset asset = assetRepository.findByAssetTagIgnoreCase(assetTag)
+                .orElseThrow(() -> new ResourceNotFoundException("Bu etikete sahip demirbaş bulunamadı: " + assetTag));
+        ensureAssetVisible(asset, getUserByEmail(userEmail));
+        return toResponse(asset);
     }
 
     @Override
@@ -77,7 +85,7 @@ public class AssetServiceImpl implements AssetService {
         Asset asset = getAsset(id);
         if (!asset.getAssetTag().equalsIgnoreCase(request.assetTag())
                 && assetRepository.existsByAssetTagIgnoreCase(request.assetTag())) {
-            throw new DuplicateResourceException("Asset already exists with tag: " + request.assetTag());
+            throw new DuplicateResourceException("Bu demirbaş etiketi zaten kayıtlı: " + request.assetTag());
         }
 
         fillAsset(asset, request.assetTag(), request.name(), request.type(), request.status(), request.serialNumber(),
@@ -90,14 +98,32 @@ public class AssetServiceImpl implements AssetService {
     public void delete(Long id) {
         Asset asset = getAsset(id);
         if (ticketRepository.existsByAssetId(id)) {
-            throw new BusinessRuleException("Asset cannot be deleted while service tickets are linked to it");
+            throw new BusinessRuleException("Destek talebi bulunan demirbaş silinemez.");
         }
         assetRepository.delete(asset);
     }
 
     private Asset getAsset(Long id) {
         return assetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip demirbaş bulunamadı. Numara: " + id));
+    }
+
+    private Asset getVisibleAsset(Long id, String userEmail) {
+        Asset asset = getAsset(id);
+        ensureAssetVisible(asset, getUserByEmail(userEmail));
+        return asset;
+    }
+
+    private void ensureAssetVisible(Asset asset, User currentUser) {
+        if (currentUser.getRole() == UserRole.EMPLOYEE
+                && (asset.getAssignedUser() == null || !asset.getAssignedUser().getId().equals(currentUser.getId()))) {
+            throw new ResourceNotFoundException("Bu demirbaş bulunamadı.");
+        }
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Oturum kullanıcısı bulunamadı."));
     }
 
     private void fillAsset(
@@ -128,7 +154,7 @@ public class AssetServiceImpl implements AssetService {
             return null;
         }
         return departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + departmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip departman bulunamadı. Numara: " + departmentId));
     }
 
     private User findUserOrNull(Long userId) {
@@ -136,7 +162,7 @@ public class AssetServiceImpl implements AssetService {
             return null;
         }
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Bu numaraya sahip kullanıcı bulunamadı. Numara: " + userId));
     }
 
     private AssetResponse toResponse(Asset asset) {

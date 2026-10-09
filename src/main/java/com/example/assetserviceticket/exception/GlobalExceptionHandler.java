@@ -39,13 +39,13 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
-        String message = "Invalid value for parameter: " + exception.getName();
+        String message = "Parametre için geçersiz değer: " + exception.getName();
         Class<?> requiredType = exception.getRequiredType();
         if (requiredType != null && requiredType.isEnum()) {
             String allowedValues = String.join(", ", Arrays.stream(requiredType.getEnumConstants())
                     .map(Object::toString)
                     .toList());
-            message = "Invalid value for parameter '" + exception.getName() + "'. Allowed values: " + allowedValues;
+            message = "Parametre için geçersiz değer: '" + exception.getName() + "'. Geçerli değerler: " + allowedValues;
         }
         return buildResponse(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), null);
     }
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
     ) {
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
-                "Request body is invalid or contains unsupported values",
+                "İstek gövdesi geçersiz veya desteklenmeyen değerler içeriyor.",
                 request.getRequestURI(),
                 null
         );
@@ -73,8 +73,8 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                "Validation Failed",
-                "Invalid request data",
+                "Doğrulama başarısız",
+                "İstek verileri geçersiz.",
                 request.getRequestURI(),
                 fieldErrors
         );
@@ -85,10 +85,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGeneric(Exception exception, HttpServletRequest request) {
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Unexpected server error",
+                "Beklenmeyen bir sunucu hatası oluştu.",
                 request.getRequestURI(),
                 null
         );
+    }
+
+    private String turkceDurum(HttpStatus status) {
+        return switch (status) {
+            case NOT_FOUND -> "Bulunamadı";
+            case CONFLICT -> "Çakışma";
+            case BAD_REQUEST -> "Hatalı İstek";
+            case INTERNAL_SERVER_ERROR -> "Sunucu Hatası";
+            default -> "İşlem Başarılı";
+        };
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(
@@ -100,7 +110,7 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(),
                 status.value(),
-                status.getReasonPhrase(),
+                turkceDurum(status),
                 message,
                 path,
                 fieldErrors

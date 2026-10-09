@@ -19,6 +19,8 @@ public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     List<Asset> findByStatus(AssetStatus status);
 
+    List<Asset> findByAssignedUserId(Long userId);
+
     long countByStatus(AssetStatus status);
 
     boolean existsByDepartmentId(Long departmentId);

@@ -5,13 +5,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateTicketRequest(
-        @NotBlank(message = "Title must not be blank")
+        @NotBlank(message = "Başlık boş bırakılamaz.")
         String title,
 
-        @NotBlank(message = "Description must not be blank")
+        @NotBlank(message = "Açıklama boş bırakılamaz.")
         String description,
 
-        @NotNull(message = "Priority must not be null")
+        @NotNull(message = "Öncelik seçilmelidir.")
         TicketPriority priority
 ) {
 }

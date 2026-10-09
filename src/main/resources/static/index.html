@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Demirbaş ve Destek Yönetimi</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Ana sayfa">
+        <span class="brand-mark">AD</span>
+        <span><strong>VarlıkMasası</strong><small>BT hizmet yönetimi</small></span>
+      </a>
+      <div class="nav-caption">ÇALIŞMA ALANI</div>
+      <nav class="main-nav" aria-label="Ana menü">
+        <button class="nav-link active" data-page="dashboard"><span class="nav-icon">▦</span>Genel Bakış</button>
+        <button class="nav-link" data-page="tickets"><span class="nav-icon">▤</span>Destek Talepleri<span id="open-ticket-count" class="nav-count">0</span></button>
+        <button class="nav-link" data-page="assets" data-role="ADMIN,TECHNICIAN,EMPLOYEE"><span class="nav-icon">▣</span>Demirbaşlar</button>
+        <button class="nav-link" data-page="users" data-role="ADMIN"><span class="nav-icon">♙</span>Kullanıcılar</button>
+        <button class="nav-link" data-page="departments" data-role="ADMIN"><span class="nav-icon">⌂</span>Departmanlar</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="demo-note"><span class="note-dot"></span><div><strong>Örnek çalışma alanı</strong><small>Veriler PostgreSQL'de saklanır.</small></div></div>
+        <a class="swagger-link" href="/swagger-ui/index.html" target="_blank" rel="noreferrer"><span>⌘</span> API dokümantasyonu <span class="external">↗</span></a>
+        <div class="sidebar-version">Staj projesi · Sürüm 1.0</div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">AD</span><strong>VarlıkMasası</strong></div>
+        <div class="breadcrumbs"><span>Çalışma Alanı</span><span class="crumb-sep">/</span><strong id="current-page-label">Genel Bakış</strong></div>
+        <div class="topbar-actions"><span id="signed-in-user" class="signed-in-user"></span><span id="connection-status" class="connection-pill"><span class="connection-dot"></span>Bağlanıyor</span><button id="refresh-button" class="icon-button" title="Verileri yenile" aria-label="Verileri yenile">↻</button><button id="logout-button" class="button button-quiet">Çıkış yap</button></div>
+      </header>
+
+      <main class="content">
+        <section class="page active" id="page-dashboard">
+          <div class="page-heading"><div><div class="eyebrow">KURUMSAL BT OPERASYONLARI</div><h1 id="dashboard-title">Genel Bakış</h1><p id="dashboard-description">Demirbaşların ve destek taleplerinin güncel durumu.</p></div><button class="button button-primary" data-role="ADMIN,EMPLOYEE" data-open-dialog="ticket-dialog"><span>＋</span> Yeni talep oluştur</button></div>
+          <div id="load-error" class="alert hidden"></div>
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-top"><span class="stat-label">Toplam demirbaş</span><span class="stat-icon blue">▣</span></div><div id="stat-total-assets" class="stat-value">—</div><div class="stat-foot">Envanter kayıtları</div></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-label">Aktif demirbaş</span><span class="stat-icon green">✓</span></div><div id="stat-active-assets" class="stat-value">—</div><div class="stat-foot">Kullanıma hazır</div></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-label">Açık talepler</span><span class="stat-icon amber">◷</span></div><div id="stat-open-tickets" class="stat-value">—</div><div class="stat-foot">İşlem bekliyor</div></article>
+            <article class="stat-card"><div class="stat-top"><span class="stat-label">İşlemde</span><span class="stat-icon violet">↗</span></div><div id="stat-progress-tickets" class="stat-value">—</div><div class="stat-foot">Teknik ekipte</div></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel recent-panel"><div class="panel-heading"><div><h2>Son destek talepleri</h2><p>En son açılan kayıtlar</p></div><button class="text-button" data-page="tickets">Tümünü gör <span>→</span></button></div><div class="table-wrap"><table><thead><tr><th>Talep</th><th>Demirbaş</th><th>Öncelik</th><th>Durum</th></tr></thead><tbody id="recent-tickets"><tr><td colspan="4" class="empty-cell">Veriler yükleniyor…</td></tr></tbody></table></div></section>
+            <section class="panel summary-panel"><div class="panel-heading"><div><h2>Envanter özeti</h2><p>Demirbaşların kullanım durumu</p></div><span class="summary-symbol">◉</span></div><div class="summary-total"><strong id="summary-assets-total">—</strong><span>toplam kayıt</span></div><div class="meter-row"><div class="meter-copy"><span><i class="legend-dot dot-active"></i>Aktif</span><strong id="summary-active">—</strong></div><div class="meter"><span id="meter-active" class="meter-active"></span></div></div><div class="meter-row"><div class="meter-copy"><span><i class="legend-dot dot-service"></i>Serviste</span><strong id="summary-service">—</strong></div><div class="meter"><span id="meter-service" class="meter-service"></span></div></div><div class="summary-link"><button class="text-button" data-page="assets">Envanteri incele <span>→</span></button></div></section>
+          </div>
+          <div class="page-footnote"><span>ⓘ</span> Bu panel, staj projesinin REST API'siyle aynı veritabanını kullanır. Teknik uç noktalar için <a href="/swagger-ui/index.html" target="_blank" rel="noreferrer">Swagger dokümantasyonunu</a> açabilirsin.</div>
+        </section>
+
+        <section class="page" id="page-assets">
+          <div class="page-heading"><div><div class="eyebrow">ENVANTER YÖNETİMİ</div><h1>Demirbaşlar</h1><p id="assets-description">Kurum cihazlarını, bağlı oldukları departmanları ve kullanım durumlarını görüntüle.</p></div><button class="button button-primary" data-role="ADMIN" data-open-dialog="asset-dialog"><span>＋</span> Demirbaş ekle</button></div>
+          <section class="panel"><div class="toolbar"><label class="search-box"><span>⌕</span><input id="asset-search" type="search" placeholder="Ad veya etiketle ara" aria-label="Demirbaş ara"></label><select id="asset-type-filter" aria-label="Tür filtresi"><option value="">Tüm türler</option></select><select id="asset-status-filter" aria-label="Durum filtresi"><option value="">Tüm durumlar</option></select></div><div class="table-wrap"><table><thead><tr><th>Demirbaş</th><th>Etiket</th><th>Tür</th><th>Departman</th><th>Zimmetli kişi</th><th>Durum</th></tr></thead><tbody id="assets-table"><tr><td colspan="6" class="empty-cell">Veriler yükleniyor…</td></tr></tbody></table></div><div id="assets-count" class="table-footer"></div></section>
+        </section>
+
+        <section class="page" id="page-tickets">
+          <div class="page-heading"><div><div class="eyebrow">HİZMET MASASI</div><h1>Destek Talepleri</h1><p id="tickets-description">Arıza ve hizmet taleplerini takip et, teknisyene ata ve durumlarını güncelle.</p></div><button class="button button-primary" data-role="ADMIN,EMPLOYEE" data-open-dialog="ticket-dialog"><span>＋</span> Yeni talep</button></div>
+          <section class="panel"><div class="toolbar"><label class="search-box"><span>⌕</span><input id="ticket-search" type="search" placeholder="Talep no veya başlıkla ara" aria-label="Talep ara"></label><select id="ticket-status-filter" aria-label="Talep durumu filtresi"><option value="">Tüm durumlar</option></select><select id="ticket-priority-filter" aria-label="Öncelik filtresi"><option value="">Tüm öncelikler</option></select></div><div class="table-wrap"><table class="ticket-table"><thead><tr><th>Talep</th><th>Demirbaş / Talep sahibi</th><th>Öncelik</th><th>Teknisyen</th><th>Durum</th><th>İşlemler</th></tr></thead><tbody id="tickets-table"><tr><td colspan="6" class="empty-cell">Veriler yükleniyor…</td></tr></tbody></table></div><div id="tickets-count" class="table-footer"></div></section>
+        </section>
+
+        <section class="page" id="page-users">
+          <div class="page-heading"><div><div class="eyebrow">EKİP DİZİNİ</div><h1>Kullanıcılar</h1><p>Talep sahiplerini ve teknik ekibi görüntüle, yeni kullanıcı ekle veya hesabı devre dışı bırak.</p></div><button class="button button-primary" data-role="ADMIN" data-open-dialog="user-dialog"><span>＋</span> Kullanıcı ekle</button></div>
+          <section class="panel"><div class="toolbar"><label class="search-box"><span>⌕</span><input id="user-search" type="search" placeholder="Ad veya e-postayla ara" aria-label="Kullanıcı ara"></label><select id="user-role-filter" aria-label="Rol filtresi"><option value="">Tüm roller</option></select></div><div class="table-wrap"><table><thead><tr><th>Kullanıcı</th><th>E-posta</th><th>Rol</th><th>Departman</th><th>Hesap durumu</th><th>İşlem</th></tr></thead><tbody id="users-table"><tr><td colspan="6" class="empty-cell">Veriler yükleniyor…</td></tr></tbody></table></div></section>
+        </section>
+
+        <section class="page" id="page-departments">
+          <div class="page-heading"><div><div class="eyebrow">KURUMSAL YAPI</div><h1>Departmanlar</h1><p>Demirbaş ve çalışanların bağlı olduğu kurum birimleri.</p></div></div>
+          <div id="department-cards" class="department-grid"><article class="panel empty-cell">Veriler yükleniyor…</article></div>
+        </section>
+        <footer class="content-footer"><span>VarlıkMasası</span><span>Demirbaş ve teknik destek yönetimi · Eğitim amaçlı demo</span></footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="asset-dialog" class="form-dialog"><form id="asset-form"><div class="dialog-heading"><div><span class="eyebrow">ENVANTERE KAYIT</span><h2>Yeni demirbaş</h2></div><button type="button" class="dialog-close" data-close-dialog aria-label="Kapat">×</button></div><label>Demirbaş etiketi<input name="assetTag" placeholder="AST-0009" required></label><label>Demirbaş adı<input name="name" placeholder="Örn. Ofis dizüstü bilgisayarı" required></label><div class="form-row"><label>Tür<select name="type" required></select></label><label>Durum<select name="status" required></select></label></div><div class="form-row"><label>Marka<input name="brand" placeholder="Örn. Lenovo"></label><label>Model<input name="model" placeholder="Örn. ThinkPad E14"></label></div><label>Departman<select name="departmentId"><option value="">Departman seçilmedi</option></select></label><label>Zimmetli kullanıcı<select name="assignedUserId"><option value="">Kullanıcı seçilmedi</option></select></label><div class="dialog-actions"><button type="button" class="button button-quiet" data-close-dialog>Vazgeç</button><button class="button button-primary" type="submit">Demirbaşı kaydet</button></div></form></dialog>
+
+  <dialog id="user-dialog" class="form-dialog"><form id="user-form"><div class="dialog-heading"><div><span class="eyebrow">EKİP DİZİNİ</span><h2>Yeni kullanıcı</h2></div><button type="button" class="dialog-close" data-close-dialog aria-label="Kapat">×</button></div><label>Ad soyad<input name="fullName" placeholder="Örn. Deniz Yılmaz" required maxlength="120"></label><label>E-posta adresi<input name="email" type="email" placeholder="ornek@kurum.com" required maxlength="180"></label><label>İlk giriş parolası<input name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></label><div class="form-row"><label>Rol<select name="role" required></select></label><label>Departman<select name="departmentId"><option value="">Departman seçilmedi</option></select></label></div><div class="dialog-actions"><button type="button" class="button button-quiet" data-close-dialog>Vazgeç</button><button class="button button-primary" type="submit">Kullanıcıyı kaydet</button></div></form></dialog>
+
+  <dialog id="ticket-dialog" class="form-dialog"><form id="ticket-form"><div class="dialog-heading"><div><span class="eyebrow">YENİ KAYIT</span><h2>Destek talebi oluştur</h2></div><button type="button" class="dialog-close" data-close-dialog aria-label="Kapat">×</button></div><label>Talep başlığı<input name="title" placeholder="Örn. Bilgisayar açılmıyor" required maxlength="150"></label><label>Açıklama<textarea name="description" placeholder="Sorunu ve gözlemlerinizi kısaca açıklayın." required rows="4"></textarea></label><div class="form-row"><label>Öncelik<select name="priority" required></select></label><label>İlgili demirbaş<select name="assetId" required></select></label></div><p class="form-help">Talep, giriş yaptığınız kullanıcı hesabıyla açılacaktır.</p><div class="dialog-actions"><button type="button" class="button button-quiet" data-close-dialog>Vazgeç</button><button class="button button-primary" type="submit">Talebi oluştur</button></div></form></dialog>
+
+  <dialog id="comments-dialog" class="form-dialog comment-dialog"><div class="dialog-heading"><div><span class="eyebrow">TALEP GEÇMİŞİ</span><h2 id="comments-title">Talep yorumları</h2></div><button type="button" class="dialog-close" data-close-dialog aria-label="Kapat">×</button></div><div id="comments-list" class="comments-list"></div><form id="comment-form"><input type="hidden" name="ticketId"><p class="form-help">Yorum, giriş yaptığınız kullanıcı hesabıyla adınıza eklenecektir.</p><label>Yorum<textarea name="content" placeholder="Güncelleme veya çözüm notu ekle…" required rows="3"></textarea></label><div class="dialog-actions"><button type="button" class="button button-quiet" data-close-dialog>Kapat</button><button class="button button-primary" type="submit">Yorumu ekle</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

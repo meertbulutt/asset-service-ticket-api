@@ -1,23 +1,26 @@
 package com.example.assetserviceticket.dto.request;
 
 import com.example.assetserviceticket.enums.TicketPriority;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@Schema(description = "Yeni destek talebi açmak için gönderilen bilgiler. Talep numarası ve oluşturan kullanıcı oturumdan belirlenir.")
 public record CreateTicketRequest(
-        @NotBlank(message = "Title must not be blank")
+        @Schema(description = "Sorunu kısa biçimde anlatan başlık", example = "Bilgisayar açılmıyor")
+        @NotBlank(message = "Başlık boş bırakılamaz.")
         String title,
 
-        @NotBlank(message = "Description must not be blank")
+        @Schema(description = "Sorunun ayrıntılı açıklaması", example = "Güç düğmesine basıldığında cihaz tepki vermiyor.")
+        @NotBlank(message = "Açıklama boş bırakılamaz.")
         String description,
 
-        @NotNull(message = "Priority must not be null")
+        @Schema(description = "Talebin öncelik seviyesi", example = "HIGH")
+        @NotNull(message = "Öncelik seçilmelidir.")
         TicketPriority priority,
 
-        @NotNull(message = "Asset id must not be null")
-        Long assetId,
-
-        @NotNull(message = "Created by id must not be null")
-        Long createdById
+        @Schema(description = "İlgili demirbaşın önceden listelenmiş ID numarası", example = "1")
+        @NotNull(message = "Demirbaş numarası zorunludur.")
+        Long assetId
 ) {
 }

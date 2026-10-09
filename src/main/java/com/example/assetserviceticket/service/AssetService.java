@@ -11,11 +11,11 @@ import java.util.List;
 public interface AssetService {
     AssetResponse create(CreateAssetRequest request);
 
-    List<AssetResponse> findAll(AssetType type, AssetStatus status);
+    List<AssetResponse> findAll(AssetType type, AssetStatus status, String userEmail);
 
-    AssetResponse findById(Long id);
+    AssetResponse findById(Long id, String userEmail);
 
-    AssetResponse findByAssetTag(String assetTag);
+    AssetResponse findByAssetTag(String assetTag, String userEmail);
 
     AssetResponse update(Long id, UpdateAssetRequest request);
 

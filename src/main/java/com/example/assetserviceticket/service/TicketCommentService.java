@@ -6,7 +6,7 @@ import com.example.assetserviceticket.dto.response.TicketCommentResponse;
 import java.util.List;
 
 public interface TicketCommentService {
-    TicketCommentResponse create(Long ticketId, CreateTicketCommentRequest request);
+    TicketCommentResponse create(Long ticketId, CreateTicketCommentRequest request, String authorEmail);
 
-    List<TicketCommentResponse> findByTicketId(Long ticketId);
+    List<TicketCommentResponse> findByTicketId(Long ticketId, String userEmail);
 }

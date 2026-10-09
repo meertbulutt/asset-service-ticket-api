@@ -6,16 +6,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateAssetRequest(
-        @NotBlank(message = "Asset tag must not be blank")
+        @NotBlank(message = "Demirbaş etiketi boş bırakılamaz.")
         String assetTag,
 
-        @NotBlank(message = "Asset name must not be blank")
+        @NotBlank(message = "Demirbaş adı boş bırakılamaz.")
         String name,
 
-        @NotNull(message = "Asset type must not be null")
+        @NotNull(message = "Demirbaş türü seçilmelidir.")
         AssetType type,
 
-        @NotNull(message = "Asset status must not be null")
+        @NotNull(message = "Demirbaş durumu seçilmelidir.")
         AssetStatus status,
 
         String serialNumber,

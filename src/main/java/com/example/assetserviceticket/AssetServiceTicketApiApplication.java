@@ -3,6 +3,7 @@ package com.example.assetserviceticket;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/** Spring Boot uygulamasının başlangıç sınıfı. */
 @SpringBootApplication
 public class AssetServiceTicketApiApplication {
 
